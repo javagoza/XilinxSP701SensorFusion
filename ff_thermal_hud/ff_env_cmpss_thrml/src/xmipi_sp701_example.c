@@ -1,4 +1,3 @@
-//#define DEBUG 1
 #include <stdio.h>
 #include "platform.h"
 #include "xil_printf.h"
@@ -42,12 +41,6 @@
 // compass scale
 #define YCMPS1 770
 #define CMPS_MARGINY 8
-
-u8 thermalImgBuff1[768*4];
-u8 thermalImgBuff2[768*4];
-u8* thermalImageBuffers[]= {thermalImgBuff1, thermalImgBuff2};
-int actuaThermalImgBuff = 1;
-
 
 
 long map(long x, long in_min, long in_max, long out_min, long out_max);
@@ -222,13 +215,7 @@ int main() {
 
 	while(1) {
         // get grayscale image from thermal array sensor
-		//loopMlx90640Gray((u8*) XVMIX_LAYER2_BASEADDR);
-		// prepare next buffer
-		actuaThermalImgBuff = (actuaThermalImgBuff +1) & 0x01;
-		// update buffer
-		loopMlx90640Gray(thermalImageBuffers[actuaThermalImgBuff]);
-		// change buffer
-		XV_mix_Set_HwReg_layer2_buf1_V(&xv_mix,(u32)thermalImageBuffers[actuaThermalImgBuff]);
+		loopMlx90640Gray((u8*)XVMIX_LAYER2_BASEADDR);
 
 		// read magnetometer data
 		data = CMPS2_GetData(&cmps2);
@@ -271,14 +258,15 @@ int main() {
 void initHeadsUpDisplay(XFf_monitor_gen* xv_ff_monitor) {
 	// Ff monitor
 	XFf_monitor_gen_Config* XV_Ff_monitor_cfg;
-	XV_Ff_monitor_cfg = XFf_monitor_gen_LookupConfig(XPAR_FF_MONITOR_GEN_1_DEVICE_ID);
-	XFf_monitor_gen_CfgInitialize(&*xv_ff_monitor, XV_Ff_monitor_cfg);
-	XFf_monitor_gen_Set_row(&*xv_ff_monitor, (u32) DISPLAY_HEIGHT);
-	XFf_monitor_gen_Set_column(&*xv_ff_monitor, (u32) DISPLAY_WIDTH);
-	XFf_monitor_gen_EnableAutoRestart(&*xv_ff_monitor);
-	XFf_monitor_gen_Start(&*xv_ff_monitor);
-	XFf_monitor_gen_Set_envData(&*xv_ff_monitor, 0x12345678);
-	XFf_monitor_gen_Set_angle(&*xv_ff_monitor, 10);
+	XV_Ff_monitor_cfg = XFf_monitor_gen_LookupConfig(
+			XPAR_FF_MONITOR_GEN_1_DEVICE_ID);
+	XFf_monitor_gen_CfgInitialize(xv_ff_monitor, XV_Ff_monitor_cfg);
+	XFf_monitor_gen_Set_row(xv_ff_monitor, (u32) DISPLAY_HEIGHT);
+	XFf_monitor_gen_Set_column(xv_ff_monitor, (u32) DISPLAY_WIDTH);
+	XFf_monitor_gen_EnableAutoRestart(xv_ff_monitor);
+	XFf_monitor_gen_Start(xv_ff_monitor);
+	XFf_monitor_gen_Set_envData(xv_ff_monitor, 0x12345678);
+	XFf_monitor_gen_Set_angle(xv_ff_monitor, 10);
 }
 
 void startVideoMixer(void) {
@@ -425,33 +413,31 @@ int startVideoSystem(void) {
 void initVideoMixer(XV_mix* xv_mix) {
 	XV_mix_Config* xv_config;
 	xv_config = XV_mix_LookupConfig(XPAR_XV_MIX_0_DEVICE_ID);
-	XV_mix_CfgInitialize(&*xv_mix, xv_config, xv_config->BaseAddress);
-	XV_mix_Set_HwReg_width(&*xv_mix, (u32) DISPLAY_WIDTH);
-	XV_mix_Set_HwReg_height(&*xv_mix, (u32) DISPLAY_HEIGHT);
-	XV_mix_Set_HwReg_layerEnable(&*xv_mix, (u32) 0b000);
+	XV_mix_CfgInitialize(xv_mix, xv_config, xv_config->BaseAddress);
+	XV_mix_Set_HwReg_width(xv_mix, (u32) DISPLAY_WIDTH);
+	XV_mix_Set_HwReg_height(xv_mix, (u32) DISPLAY_HEIGHT);
+	XV_mix_Set_HwReg_layerEnable(xv_mix, (u32) 0b000);
 
-	XV_mix_Set_HwReg_layerStartX_0(&*xv_mix, (u32) 0);
-	XV_mix_Set_HwReg_layerStartY_0(&*xv_mix, 0);
-	XV_mix_Set_HwReg_layerWidth_0(&*xv_mix, (u32) DISPLAY_WIDTH);
-	XV_mix_Set_HwReg_layerHeight_0(&*xv_mix, (u32) DISPLAY_HEIGHT);
-	XV_mix_Set_HwReg_layerAlpha_0(&*xv_mix, 255);
+	XV_mix_Set_HwReg_layerStartX_0(xv_mix, (u32) 0);
+	XV_mix_Set_HwReg_layerStartY_0(xv_mix, 0);
+	XV_mix_Set_HwReg_layerWidth_0(xv_mix, (u32) DISPLAY_WIDTH);
+	XV_mix_Set_HwReg_layerHeight_0(xv_mix, (u32) DISPLAY_HEIGHT);
+	XV_mix_Set_HwReg_layerAlpha_0(xv_mix, 255);
 
-	XV_mix_Set_HwReg_layerStartX_1(&*xv_mix, (u32) 0);
-	XV_mix_Set_HwReg_layerStartY_1(&*xv_mix, 0);
-	XV_mix_Set_HwReg_layerWidth_1(&*xv_mix, (u32) DISPLAY_WIDTH);
-	XV_mix_Set_HwReg_layerHeight_1(&*xv_mix, (u32) DISPLAY_HEIGHT);
-	XV_mix_Set_HwReg_layerAlpha_1(&*xv_mix, 255);
+	XV_mix_Set_HwReg_layerStartX_1(xv_mix, (u32) 0);
+	XV_mix_Set_HwReg_layerStartY_1(xv_mix, 0);
+	XV_mix_Set_HwReg_layerWidth_1(xv_mix, (u32) DISPLAY_WIDTH);
+	XV_mix_Set_HwReg_layerHeight_1(xv_mix, (u32) DISPLAY_HEIGHT);
+	XV_mix_Set_HwReg_layerAlpha_1(xv_mix, 255);
 
-	XV_mix_Set_HwReg_layerStartX_2(&*xv_mix, (u32) DISPLAY_WIDTH / 2 - 16 * 4);
-	XV_mix_Set_HwReg_layerStartY_2(&*xv_mix, YCMPS1 + 16);
-	XV_mix_Set_HwReg_layerWidth_2(&*xv_mix, (u32) THERMAL_WIDTH);
-	XV_mix_Set_HwReg_layerHeight_2(&*xv_mix, (u32) THERMAL_HEIGHT);
-	XV_mix_Set_HwReg_layerAlpha_2(&*xv_mix, 255);
-	XV_mix_Set_HwReg_layerScaleFactor_2(&*xv_mix, XVMIX_SCALE_FACTOR_4X);
-	XV_mix_Set_HwReg_layerStride_2(&*xv_mix, THERMAL_WIDTH * 4);
-	// XV_mix_Set_HwReg_layer2_buf1_V(&*xv_mix, (u32) (XVMIX_LAYER2_BASEADDR));
-	XV_mix_Set_HwReg_layer2_buf1_V(&*xv_mix, (u32) (thermalImageBuffers[actuaThermalImgBuff]));
-
+	XV_mix_Set_HwReg_layerStartX_2(xv_mix, (u32) DISPLAY_WIDTH / 2 - 16 * 4);
+	XV_mix_Set_HwReg_layerStartY_2(xv_mix, YCMPS1 + 16);
+	XV_mix_Set_HwReg_layerWidth_2(xv_mix, (u32) THERMAL_WIDTH);
+	XV_mix_Set_HwReg_layerHeight_2(xv_mix, (u32) THERMAL_HEIGHT);
+	XV_mix_Set_HwReg_layerAlpha_2(xv_mix, 255);
+	XV_mix_Set_HwReg_layerScaleFactor_2(xv_mix, XVMIX_SCALE_FACTOR_4X);
+	XV_mix_Set_HwReg_layerStride_2(xv_mix, THERMAL_WIDTH * 4);
+	XV_mix_Set_HwReg_layer2_buf1_V(xv_mix, (u32) (XVMIX_LAYER2_BASEADDR));
 }
 
 
@@ -805,5 +791,3 @@ void MLX90640_GetSensorRaw(uint16_t *frameData, int *result, int *minT, int *max
 
     }
 }
-
-
